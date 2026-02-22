@@ -78,21 +78,25 @@ If you downloaded a compiled release:
 
 ## 📂 How to Export from Foundry
 
-### Single Journal Export
+### Export a Single Journal
 
-1. Right-click journal entry
-2. Export
-3. Save ZIP
-4. Open ZIP in this tool
+1. Open the Journal Directory.
+2. Open the Journal.
+3. Select <img width="189" height="128" alt="image" src="https://github.com/user-attachments/assets/6316004a-7b5f-44c4-b6f2-f0d4dd59ab42" />
+In the upper right corner of the journal window.
+4. A `.zip` file will be created and automatically downloaded to your downloads folder.
 
-### Folder Export
+### Export a Folder of Journals
 
-1. Right-click journal folder
-2. Export
-3. Save ZIP
-4. Open ZIP in this tool
+1. CLick the button in the top of the journals tab. <img width="355" height="89" alt="image" src="https://github.com/user-attachments/assets/b8a28a51-8ee5-438d-a0c3-d3339ba56f16" />
 
-Both formats are fully supported.
+2. Select **Export Folder for PDF App**. <img width="400" height="144" alt="image" src="https://github.com/user-attachments/assets/a0ef9d89-5b54-4612-b566-5fa5cd827467" />
+
+3. Click Export.  Download will start automatically and the downloaded ZIP will be in your downloads folder.
+4. The module generates a structured ZIP containing:
+
+   * `manifest.json`
+   * `/journals/` directory with journal data
 
 ---
 
@@ -202,4 +206,5 @@ This tool converts exported content provided by users.
 Users are responsible for respecting intellectual property rights of the content they export.
 
 ---
+
 
