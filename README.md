@@ -77,7 +77,7 @@ If you downloaded a compiled release:
 ---
 
 ## 📂 How to Export from Foundry
-
+This requires my companion FoundryVTT module to generate the ZIP.  Get it [HERE](https://github.com/Gacky2k/journal-resolver-exporter)
 ### Export a Single Journal
 
 1. Open the Journal Directory.
@@ -206,5 +206,6 @@ This tool converts exported content provided by users.
 Users are responsible for respecting intellectual property rights of the content they export.
 
 ---
+
 
 
