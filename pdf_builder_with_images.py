@@ -79,6 +79,22 @@ def sanitize_html(s: str) -> str:
 
     s = s.replace("&nbsp;", " ")
 
+    # Some modules export self-closing or empty anchors like <a href="..."/> or <a href="..."></a>.
+    # ReportLab requires proper <a>...</a> pairs. Convert these into clickable links with visible text.
+    def _fix_anchor(m: re.Match) -> str:
+        attrs = m.group(1) or ""
+        href_m = re.search(r'href\s*=\s*"(.*?)"', attrs, re.IGNORECASE)
+        href = href_m.group(1) if href_m else ""
+        if not href:
+            return ""
+        safe_text = href
+        return f'<a href="{href}">{safe_text}</a>'
+
+    # Self-closing <a .../>
+    s = re.sub(r"<\s*a\b([^>]*)/\s*>", _fix_anchor, s, flags=re.IGNORECASE)
+    # Empty <a ...></a>
+    s = re.sub(r"<\s*a\b([^>]*)>\s*</\s*a\s*>", _fix_anchor, s, flags=re.IGNORECASE)
+
     # Convert semantic tags to ReportLab tags
     s = re.sub(r"</?\s*strong[^>]*>", lambda m: "</b>" if m.group(0).startswith("</") else "<b>", s, flags=re.IGNORECASE)
     s = re.sub(r"</?\s*em[^>]*>",     lambda m: "</i>" if m.group(0).startswith("</") else "<i>", s, flags=re.IGNORECASE)
@@ -117,6 +133,19 @@ def sanitize_html(s: str) -> str:
 
     # Re-normalize <br/>
     s = _BR_RE.sub("<br/>", s)
+
+
+    # Balance anchor tags to avoid ReportLab parse errors on malformed HTML exports.
+    # If there are more opening <a ...> than closing </a>, close them at the end.
+    opens = len(re.findall(r"<\s*a\b[^>]*>", s, flags=re.IGNORECASE))
+    closes = len(re.findall(r"</\s*a\s*>", s, flags=re.IGNORECASE))
+    if closes > opens:
+        # Drop stray closing tags
+        diff = closes - opens
+        for _ in range(diff):
+            s = re.sub(r"</\s*a\s*>", "", s, count=1, flags=re.IGNORECASE)
+    elif opens > closes:
+        s += "</a>" * (opens - closes)
 
     return s
 
