@@ -15,6 +15,10 @@ This desktop companion application converts Foundry journal exports (ZIP files) 
 Designed for Game Masters, publishers, and content creators who want professional-quality documents from Foundry content.
 
 ---
+## ✨ Features (v1.0.1)
+
+Fixed ReportLab parsing errors caused by malformed or self-closing anchor tags in some Foundry module exports (notably PF2e content). The sanitizer now normalizes and balances <a> tags to ensure reliable PDF generation.
+
 
 ## ✨ Features (v1.0)
 
@@ -206,6 +210,7 @@ This tool converts exported content provided by users.
 Users are responsible for respecting intellectual property rights of the content they export.
 
 ---
+
 
 
 
