@@ -36,8 +36,16 @@ Designed for Game Masters, publishers, and content creators who want professiona
 ---
 
 ## 🖥 Screenshots
+1. Open your *.zip that was created with the required, companion FoundryVTT module (https://github.com/Gacky2k/journal-resolver-exporter).
+2. Select a builtin background image or browse to add your own!
+3. Optionally specify mode:  Fill, Fit, Stretch or Tile.
+4. Set Opacity (0-100) 100=full opacity and 0=full transparancy.
+5. Optionally apply to only first page.
+6. Click "Generate PDF..." once you're happy with your settings!
 
-*(Add screenshots here once you upload them to the repo)*
+   
+<img width="1102" height="732" alt="image" src="https://github.com/user-attachments/assets/a6ce8a35-526e-4e21-ab39-cc0b3ae150c3" />
+
 
 ---
 
