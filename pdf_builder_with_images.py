@@ -1,4 +1,4 @@
-# pdf_builder_with_images.py  (FINAL working baseline)
+# pdf_builder_with_images.py  (V1.6 background options)
 # - Supports app_with_dividers.py API: build_pdf(out_path=..., title=..., journals=..., selection=Selection(items=...), divider_pages=...)
 # - Supports journals as Journal objects OR legacy tuples
 # - Supports page model with page.headings -> heading.blocks (ContentBlock.kind: html/p/img/table) OR legacy page.blocks
@@ -6,6 +6,7 @@
 # - TOC: dotted leaders, indentation, clickable, multi-page
 # - Back-to-TOC: drawn once at top+bottom of content pages; skipped on cover+TOC page; internal destination (no Acrobat file:// warning)
 # - Sanitizes Foundry HTML into ReportLab-friendly inline markup
+# - Backgrounds: path + mode (fill/fit/stretch/tile) + opacity + first-page-only
 
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from reportlab.lib.utils import ImageReader
 
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -39,7 +41,7 @@ try:
 except Exception:
     cairosvg = None
 
-# Pillow for WebP reliability
+# Pillow for WebP reliability and background processing
 try:
     from PIL import Image as PILImage  # type: ignore
 except Exception:
@@ -133,7 +135,6 @@ def sanitize_html(s: str) -> str:
 
     # Re-normalize <br/>
     s = _BR_RE.sub("<br/>", s)
-
 
     # Balance anchor tags to avoid ReportLab parse errors on malformed HTML exports.
     # If there are more opening <a ...> than closing </a>, close them at the end.
@@ -320,6 +321,247 @@ def _draw_back_to_toc(canvas, doc, toc_page: int = 2):
     canvas.restoreState()
 
 
+def _safe_alpha(alpha: float) -> float:
+    try:
+        return max(0.0, min(1.0, float(alpha)))
+    except Exception:
+        return 1.0
+
+
+def _normalize_background_mode(mode: Optional[str]) -> str:
+    mode = (mode or "fill").strip().lower()
+    return mode if mode in {"fill", "fit", "stretch", "tile"} else "fill"
+
+
+def _set_canvas_alpha(canvas, alpha: float) -> None:
+    try:
+        canvas.setFillAlpha(alpha)
+    except Exception:
+        pass
+    try:
+        canvas.setStrokeAlpha(alpha)
+    except Exception:
+        pass
+
+
+def _background_reader_with_pillow(
+    background_path: str,
+    page_w: float,
+    page_h: float,
+    mode: str,
+    opacity: float,
+) -> Optional[ImageReader]:
+    if PILImage is None:
+        return None
+
+    try:
+        with PILImage.open(background_path) as raw:
+            src = raw.convert("RGBA")
+            target_w = max(1, int(round(page_w)))
+            target_h = max(1, int(round(page_h)))
+            page = PILImage.new("RGBA", (target_w, target_h), (255, 255, 255, 0))
+
+            if mode == "stretch":
+                placed = src.resize((target_w, target_h), PILImage.LANCZOS)
+                page.alpha_composite(placed, (0, 0))
+
+            elif mode == "tile":
+                tile = src
+                # Keep huge source images from creating a single giant tile.
+                max_tile_w = max(1, target_w)
+                max_tile_h = max(1, target_h)
+                if tile.width > max_tile_w or tile.height > max_tile_h:
+                    ratio = min(max_tile_w / float(tile.width), max_tile_h / float(tile.height))
+                    new_size = (
+                        max(1, int(round(tile.width * ratio))),
+                        max(1, int(round(tile.height * ratio))),
+                    )
+                    tile = tile.resize(new_size, PILImage.LANCZOS)
+                for y in range(0, target_h, max(1, tile.height)):
+                    for x in range(0, target_w, max(1, tile.width)):
+                        page.alpha_composite(tile, (x, y))
+
+            else:
+                src_ratio = src.width / float(src.height)
+                page_ratio = target_w / float(target_h)
+
+                if mode == "fit":
+                    if src_ratio > page_ratio:
+                        draw_w = target_w
+                        draw_h = max(1, int(round(draw_w / src_ratio)))
+                    else:
+                        draw_h = target_h
+                        draw_w = max(1, int(round(draw_h * src_ratio)))
+                    placed = src.resize((draw_w, draw_h), PILImage.LANCZOS)
+                    x = (target_w - draw_w) // 2
+                    y = (target_h - draw_h) // 2
+                    page.alpha_composite(placed, (x, y))
+
+                else:  # fill
+                    if src_ratio > page_ratio:
+                        draw_h = target_h
+                        draw_w = max(1, int(round(draw_h * src_ratio)))
+                    else:
+                        draw_w = target_w
+                        draw_h = max(1, int(round(draw_w / src_ratio)))
+                    placed = src.resize((draw_w, draw_h), PILImage.LANCZOS)
+                    x = (target_w - draw_w) // 2
+                    y = (target_h - draw_h) // 2
+                    page.alpha_composite(placed, (x, y))
+
+            opacity = _safe_alpha(opacity)
+            if opacity < 1.0:
+                alpha_band = page.getchannel("A")
+                alpha_band = alpha_band.point(lambda px: int(px * opacity))
+                page.putalpha(alpha_band)
+
+            out = io.BytesIO()
+            page.save(out, format="PNG")
+            out.seek(0)
+            return ImageReader(out)
+    except Exception:
+        return None
+
+
+def _draw_page_background(
+    canvas,
+    doc,
+    background_path: Optional[str],
+    *,
+    background_mode: str = "fill",
+    background_opacity: float = 1.0,
+    background_first_page_only: bool = False,
+) -> None:
+    if not background_path:
+        return
+    if background_first_page_only and getattr(doc, "page", 1) != 1:
+        return
+
+    try:
+        page_w, page_h = doc.pagesize
+        mode = _normalize_background_mode(background_mode)
+        opacity = _safe_alpha(background_opacity)
+
+        processed = _background_reader_with_pillow(background_path, page_w, page_h, mode, opacity)
+        if processed is not None:
+            canvas.saveState()
+            canvas.drawImage(
+                processed,
+                0,
+                0,
+                width=page_w,
+                height=page_h,
+                preserveAspectRatio=False,
+                mask="auto",
+            )
+            canvas.restoreState()
+            return
+
+        # Fallback path if Pillow is unavailable or preprocessing fails.
+        img = ImageReader(background_path)
+        img_w, img_h = img.getSize()
+        if not img_w or not img_h:
+            return
+
+        canvas.saveState()
+        if opacity < 1.0:
+            _set_canvas_alpha(canvas, opacity)
+
+        if mode == "stretch":
+            canvas.drawImage(
+                img,
+                0,
+                0,
+                width=page_w,
+                height=page_h,
+                preserveAspectRatio=False,
+                mask="auto",
+            )
+
+        elif mode == "fit":
+            scale = min(page_w / float(img_w), page_h / float(img_h))
+            draw_w = img_w * scale
+            draw_h = img_h * scale
+            x = (page_w - draw_w) / 2.0
+            y = (page_h - draw_h) / 2.0
+            canvas.drawImage(
+                img,
+                x,
+                y,
+                width=draw_w,
+                height=draw_h,
+                preserveAspectRatio=True,
+                mask="auto",
+            )
+
+        elif mode == "tile":
+            tile_w = img_w
+            tile_h = img_h
+            if tile_w > page_w or tile_h > page_h:
+                scale = min(page_w / float(img_w), page_h / float(img_h))
+                tile_w = max(1.0, img_w * scale)
+                tile_h = max(1.0, img_h * scale)
+            y = 0.0
+            while y < page_h:
+                x = 0.0
+                while x < page_w:
+                    canvas.drawImage(
+                        img,
+                        x,
+                        y,
+                        width=tile_w,
+                        height=tile_h,
+                        preserveAspectRatio=True,
+                        mask="auto",
+                    )
+                    x += tile_w
+                y += tile_h
+
+        else:  # fill
+            scale = max(page_w / float(img_w), page_h / float(img_h))
+            draw_w = img_w * scale
+            draw_h = img_h * scale
+            x = (page_w - draw_w) / 2.0
+            y = (page_h - draw_h) / 2.0
+            canvas.drawImage(
+                img,
+                x,
+                y,
+                width=draw_w,
+                height=draw_h,
+                preserveAspectRatio=True,
+                mask="auto",
+            )
+
+        canvas.restoreState()
+    except Exception:
+        # Backgrounds are optional polish; never fail the export because of one.
+        return
+
+
+def _decorate_page(
+    canvas,
+    doc,
+    *,
+    background_path: Optional[str],
+    background_mode: str = "fill",
+    background_opacity: float = 1.0,
+    background_first_page_only: bool = False,
+    toc_page: int = 2,
+    include_back_to_toc: bool = True,
+):
+    _draw_page_background(
+        canvas,
+        doc,
+        background_path,
+        background_mode=background_mode,
+        background_opacity=background_opacity,
+        background_first_page_only=background_first_page_only,
+    )
+    if include_back_to_toc:
+        _draw_back_to_toc(canvas, doc, toc_page=toc_page)
+
+
 # -----------------------------
 # Public API
 # -----------------------------
@@ -331,6 +573,10 @@ def build_pdf(
     selection: Optional[Selection] = None,
     divider_pages: bool = True,
     page_size=letter,
+    background_path: Optional[str] = None,
+    background_mode: str = "fill",
+    background_opacity: float = 1.0,
+    background_first_page_only: bool = False,
     **kwargs,
 ):
     journals_list = _normalize_journals(journals)
@@ -456,8 +702,26 @@ def build_pdf(
 
     doc.multiBuild(
         story,
-        onFirstPage=lambda c, d: None,
-        onLaterPages=lambda c, d: _draw_back_to_toc(c, d, toc_page=2),
+        onFirstPage=lambda c, d: _decorate_page(
+            c,
+            d,
+            background_path=background_path,
+            background_mode=background_mode,
+            background_opacity=background_opacity,
+            background_first_page_only=background_first_page_only,
+            toc_page=2,
+            include_back_to_toc=False,
+        ),
+        onLaterPages=lambda c, d: _decorate_page(
+            c,
+            d,
+            background_path=background_path,
+            background_mode=background_mode,
+            background_opacity=background_opacity,
+            background_first_page_only=background_first_page_only,
+            toc_page=2,
+            include_back_to_toc=True,
+        ),
     )
 
 

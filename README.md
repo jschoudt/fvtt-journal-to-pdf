@@ -15,12 +15,8 @@ This desktop companion application converts Foundry journal exports (ZIP files) 
 Designed for Game Masters, publishers, and content creators who want professional-quality documents from Foundry content.
 
 ---
-## ✨ Features (v1.0.1)
 
-Fixed ReportLab parsing errors caused by malformed or self-closing anchor tags in some Foundry module exports (notably PF2e content). The sanitizer now normalizes and balances <a> tags to ensure reliable PDF generation.
-
-
-## ✨ Features (v1.0)
+## ✨ Features (v1.5)
 
 * 📚 Multi-journal selection UI
 * 📑 Automatic hierarchical Table of Contents
@@ -35,16 +31,14 @@ Fixed ReportLab parsing errors caused by malformed or self-closing anchor tags i
   * Folder export (`manifest.json` + journals/)
 * 🧩 Foundry entity links converted into readable text placeholders
 * 🖨 Print-friendly layout
+* 🎨 Optional full-page PDF backgrounds (built-in or custom image)
 
 ---
 
 ## 🖥 Screenshots
 
-<img width="1102" height="732" alt="image" src="https://github.com/user-attachments/assets/6f344cee-b1ac-4b66-b03c-9441afdcd870" />
+*(Add screenshots here once you upload them to the repo)*
 
-YouTube video:
-
-https://youtu.be/16jgbA_AvAc
 ---
 
 ## 📦 Installation
@@ -83,26 +77,22 @@ If you downloaded a compiled release:
 ---
 
 ## 📂 How to Export from Foundry
-This requires my companion FoundryVTT module to generate the ZIP.  Get it [HERE](https://github.com/Gacky2k/journal-resolver-exporter)
-### Export a Single Journal
 
-1. Open the Journal Directory.
-2. Open the Journal.
-3. Select <img width="189" height="128" alt="image" src="https://github.com/user-attachments/assets/6316004a-7b5f-44c4-b6f2-f0d4dd59ab42" />
-In the upper right corner of the journal window.
-4. A `.zip` file will be created and automatically downloaded to your downloads folder.
+### Single Journal Export
 
-### Export a Folder of Journals
+1. Right-click journal entry
+2. Export
+3. Save ZIP
+4. Open ZIP in this tool
 
-1. CLick the button in the top of the journals tab. <img width="355" height="89" alt="image" src="https://github.com/user-attachments/assets/b8a28a51-8ee5-438d-a0c3-d3339ba56f16" />
+### Folder Export
 
-2. Select **Export Folder for PDF App**. <img width="400" height="144" alt="image" src="https://github.com/user-attachments/assets/a0ef9d89-5b54-4612-b566-5fa5cd827467" />
+1. Right-click journal folder
+2. Export
+3. Save ZIP
+4. Open ZIP in this tool
 
-3. Click Export.  Download will start automatically and the downloaded ZIP will be in your downloads folder.
-4. The module generates a structured ZIP containing:
-
-   * `manifest.json`
-   * `/journals/` directory with journal data
+Both formats are fully supported.
 
 ---
 
@@ -142,7 +132,7 @@ Example using PyInstaller:
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed app_with_dividers.py
+pyinstaller --onefile --windowed --add-data "backgrounds;backgrounds" app_with_dividers.py
 ```
 
 ---
@@ -172,9 +162,9 @@ This project is not affiliated with or endorsed by Foundry Gaming LLC.
 
 ## 🚀 Roadmap
 
-### v1.1 (Planned)
+### v1.6 (Ideas)
 
-* Optional parchment backgrounds
+* More bundled background packs
 * Visual themes
 * Header / footer customization
 * Improved typography
@@ -212,8 +202,3 @@ This tool converts exported content provided by users.
 Users are responsible for respecting intellectual property rights of the content they export.
 
 ---
-
-
-
-
-
