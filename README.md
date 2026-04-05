@@ -46,6 +46,7 @@ Designed for Game Masters, publishers, and content creators who want professiona
    
 <img width="1102" height="732" alt="image" src="https://github.com/user-attachments/assets/a6ce8a35-526e-4e21-ab39-cc0b3ae150c3" />
 
+<img width="728" height="944" alt="image" src="https://github.com/user-attachments/assets/5a0f092d-30ee-413a-8a18-2457443ff472" />
 
 ---
 
