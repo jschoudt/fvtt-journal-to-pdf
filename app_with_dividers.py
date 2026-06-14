@@ -327,7 +327,7 @@ class MainWindow(QMainWindow):
             self,
             "Choose background image",
             start_dir,
-            "Images (*.png *.jpg *.jpeg *.webp);;All Files (*)",
+            "Images (*.png *.jpg *.jpeg *.webp *.PNG *.JPG *.JPEG *.WEBP);;All Files (*)",
         )
         if not path:
             if self.cmb_background.currentData() == "__custom__" and not self.custom_background_path:
@@ -357,7 +357,7 @@ class MainWindow(QMainWindow):
             self,
             "Add journal export(s)",
             "",
-            "FVTT Export ZIP (*.zip);;All Files (*)",
+            "FVTT Export ZIP (*.zip *.ZIP);;All Files (*)",
         )
         if not paths:
             return

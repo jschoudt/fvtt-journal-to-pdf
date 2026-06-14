@@ -123,6 +123,20 @@ Then install Python dependency:
 pip install cairosvg
 ```
 
+### macOS
+
+Install Cairo via Homebrew:
+
+```bash
+brew install cairo
+```
+
+Then install Python dependency (already in `requirements.txt`):
+
+```bash
+pip install cairosvg
+```
+
 ---
 
 ## 🧱 Project Structure
@@ -137,12 +151,24 @@ pdf_builder_with_images.py           # PDF renderer
 
 ## 🛠 Building an Executable
 
-Example using PyInstaller:
+### Windows
 
 ```bash
 pip install pyinstaller
 pyinstaller --onefile --windowed --add-data "backgrounds;backgrounds" app_with_dividers.py
 ```
+
+*(Or run `build.bat`)*
+
+### macOS
+
+To build a native, double-clickable `.app` bundle:
+
+```bash
+./build_mac.sh
+```
+
+This script creates a virtual environment, installs dependencies, and runs PyInstaller with the spec file. The output bundle will be saved to `dist/FVTT-Journal-to-PDF.app`.
 
 ---
 

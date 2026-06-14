@@ -179,6 +179,8 @@ def _get_journal_parts(j: Any) -> Tuple[str, List[Any], Optional[str]]:
 def _resolve_asset_path(assets_dir: Optional[str], src: str) -> Optional[str]:
     if not src:
         return None
+    # Normalize slashes to make it cross-platform
+    src = src.replace("\\", "/")
     if os.path.isabs(src) and os.path.exists(src):
         return src
     if not assets_dir:

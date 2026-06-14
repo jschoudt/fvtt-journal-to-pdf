@@ -266,12 +266,14 @@ def parse_journal(path: str) -> Union[Journal, List[Journal]]:
         if isinstance(entries, list):
             for ent in entries:
                 if isinstance(ent, str):
-                    journal_files.append((Path(root_dir or "") / ent) if root_dir else Path(ent))
+                    ent_norm = ent.replace("\\", "/")
+                    journal_files.append((Path(root_dir or "") / ent_norm) if root_dir else Path(ent_norm))
                 elif isinstance(ent, dict):
                     for k in ("file", "path", "json", "href"):
                         v = ent.get(k)
                         if isinstance(v, str) and v.lower().endswith(".json"):
-                            journal_files.append((Path(root_dir or "") / v) if root_dir else Path(v))
+                            v_norm = v.replace("\\", "/")
+                            journal_files.append((Path(root_dir or "") / v_norm) if root_dir else Path(v_norm))
                             break
 
         # Fallback: glob any jsons in journals/
