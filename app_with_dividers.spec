@@ -60,7 +60,7 @@ else:
         a.binaries,
         a.datas,
         [],
-        name='app_with_dividers',
+        name='FVTT-Journal-to-PDF',
         debug=False,
         bootloader_ignore_signals=False,
         strip=False,

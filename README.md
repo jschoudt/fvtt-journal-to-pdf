@@ -137,6 +137,20 @@ Then install Python dependency (already in `requirements.txt`):
 pip install cairosvg
 ```
 
+### Linux
+
+Install Cairo via your package manager (e.g., Debian/Ubuntu):
+
+```bash
+sudo apt-get install libcairo2
+```
+
+Then install Python dependency (already in `requirements.txt`):
+
+```bash
+pip install cairosvg
+```
+
 ---
 
 ## 🧱 Project Structure
@@ -169,6 +183,16 @@ To build a native, double-clickable `.app` bundle:
 ```
 
 This script creates a virtual environment, installs dependencies, and runs PyInstaller with the spec file. The output bundle will be saved to `dist/FVTT-Journal-to-PDF.app`.
+
+### Linux
+
+To build a standalone Linux executable:
+
+```bash
+./build_linux.sh
+```
+
+This script creates a virtual environment, installs dependencies, and runs PyInstaller with the spec file. The output binary will be saved to `dist/FVTT-Journal-to-PDF`.
 
 ---
 
